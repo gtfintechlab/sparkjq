@@ -5,7 +5,6 @@ import tempfile
 from unittest.mock import patch
 
 import pytest
-
 from sparkjq.slurm import (
     SlurmContext,
     build_log_dir,
@@ -50,9 +49,7 @@ class TestGetWorkerList:
         result = get_worker_list()
         assert result == ["node002", "node003"]
 
-    def test_get_worker_list_single_node(
-        self, mock_single_node_env, mock_subprocess_single_node
-    ):
+    def test_get_worker_list_single_node(self, mock_single_node_env, mock_subprocess_single_node):
         """Test getting worker list with single node (no workers)."""
         result = get_worker_list()
         assert result == []
@@ -112,9 +109,9 @@ class TestGetSlurmContext:
     def test_get_slurm_context_default(self, mock_slurm_env, mock_subprocess):
         """Test getting SLURM context with default parameters."""
         mock_subprocess.return_value = "node001\nnode002\nnode003"
-        
+
         ctx = get_slurm_context()
-        
+
         assert ctx.nnodes == 3
         assert ctx.rank == 0
         assert ctx.ncpus == 4
@@ -123,36 +120,30 @@ class TestGetSlurmContext:
         assert ctx.port == 7077
         assert ctx.scratch.startswith("/tmp/spark-jobqueue-")
 
-    def test_get_slurm_context_custom_port_scratch(
-        self, mock_slurm_env, mock_subprocess
-    ):
+    def test_get_slurm_context_custom_port_scratch(self, mock_slurm_env, mock_subprocess):
         """Test getting SLURM context with custom port and scratch."""
         mock_subprocess.return_value = "node001\nnode002\nnode003"
-        
+
         ctx = get_slurm_context(port=8080, scratch="~/myscratch")
-        
+
         assert ctx.port == 8080
         assert ctx.scratch == os.path.expanduser("~/myscratch")
 
-    def test_get_slurm_context_no_cpus_per_task(
-        self, mock_slurm_env, mock_subprocess, monkeypatch
-    ):
+    def test_get_slurm_context_no_cpus_per_task(self, mock_slurm_env, mock_subprocess, monkeypatch):
         """Test fallback to os.sched_getaffinity when SLURM_CPUS_PER_TASK not set."""
         mock_subprocess.return_value = "node001"
         monkeypatch.delenv("SLURM_CPUS_PER_TASK", raising=False)
-        
+
         with patch("os.sched_getaffinity") as mock_affinity:
             mock_affinity.return_value = {0, 1, 2, 3, 4, 5, 6, 7}
             ctx = get_slurm_context()
             assert ctx.ncpus == 8
 
-    def test_get_slurm_context_no_ntasks(
-        self, mock_slurm_env, mock_subprocess, monkeypatch
-    ):
+    def test_get_slurm_context_no_ntasks(self, mock_slurm_env, mock_subprocess, monkeypatch):
         """Test fallback to SLURM_NNODES when SLURM_NTASKS not set."""
         mock_subprocess.return_value = "node001"
         monkeypatch.delenv("SLURM_NTASKS", raising=False)
-        
+
         ctx = get_slurm_context()
         assert ctx.world_size == 3  # Should use SLURM_NNODES value
 
@@ -162,7 +153,7 @@ class TestGetSlurmContext:
         """Test using SPARK_MASTER_PORT environment variable."""
         mock_subprocess.return_value = "node001"
         monkeypatch.setenv("SPARK_MASTER_PORT", "9999")
-        
+
         ctx = get_slurm_context()
         assert ctx.port == 9999
 
@@ -182,29 +173,25 @@ class TestBuildLogDir:
             mock_realpath.return_value = "/current/dir"
             with patch("os.makedirs") as mock_makedirs:
                 result = build_log_dir()
-                
+
                 assert result == "/current/dir/12345-log"
-                mock_makedirs.assert_called_once_with(
-                    "/current/dir/12345-log", exist_ok=True
-                )
+                mock_makedirs.assert_called_once_with("/current/dir/12345-log", exist_ok=True)
 
     def test_build_log_dir_custom_path(self, mock_slurm_env):
         """Test building log directory with custom path."""
         with patch("os.makedirs") as mock_makedirs:
             result = build_log_dir("/custom/logs")
-            
+
             assert result == "/custom/logs/12345-log"
-            mock_makedirs.assert_called_once_with(
-                "/custom/logs/12345-log", exist_ok=True
-            )
+            mock_makedirs.assert_called_once_with("/custom/logs/12345-log", exist_ok=True)
 
     def test_build_log_dir_expanduser(self, mock_slurm_env):
         """Test that ~ is expanded in custom path."""
         with patch("os.path.expanduser") as mock_expanduser:
             mock_expanduser.return_value = "/home/user/logs"
-            with patch("os.makedirs") as mock_makedirs:
+            with patch("os.makedirs"):
                 result = build_log_dir("~/logs")
-                
+
                 mock_expanduser.assert_called_once_with("~/logs")
                 assert result == "/home/user/logs/12345-log"
 
@@ -214,7 +201,7 @@ class TestBuildLogDir:
             # Create the log directory first
             log_dir = os.path.join(tmpdir, "12345-log")
             os.makedirs(log_dir)
-            
+
             # Should not raise an error
             result = build_log_dir(tmpdir)
             assert result == log_dir

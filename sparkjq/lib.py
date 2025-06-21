@@ -2,6 +2,7 @@ import asyncio
 import os
 import subprocess
 import sys
+from typing import Optional
 
 from .slurm import SlurmContext, build_log_dir, get_slurm_context, get_worker_list
 from .spark import (
@@ -20,7 +21,12 @@ class SLURMCluster:
     slurm_context: SlurmContext
     spark_context: SparkContext
 
-    def __init__(self, port: int = None, scratch_dir: str = None, log_dir: str = None):
+    def __init__(
+        self,
+        port: Optional[int] = None,
+        scratch_dir: Optional[str] = None,
+        log_dir: Optional[str] = None,
+    ):
         self.slurm_context = get_slurm_context(port=port, scratch=scratch_dir)
 
         self.spark_context = asyncio.get_event_loop().run_until_complete(get_spark_context())
@@ -47,7 +53,7 @@ class SLURMCluster:
 
         executable_path = os.path.join(self.spark_context.home, "sbin", "start-all.sh")
 
-        self.handle = subprocess.Popen(
+        self.handle = subprocess.Popen(  # nosec B603 - spark scripts are from validated installation
             [executable_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -63,7 +69,7 @@ class SLURMCluster:
     def __exit__(self, exc_type, exc_value, traceback):
         """Utilization as context manager."""
         executable_path = os.path.join(self.spark_context.home, "sbin", "stop-all.sh")
-        self.handle = subprocess.Popen(
+        self.handle = subprocess.Popen(  # nosec B603 - spark scripts are from validated installation
             [executable_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

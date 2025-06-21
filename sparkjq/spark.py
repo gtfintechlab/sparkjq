@@ -2,7 +2,7 @@ import os
 import socket
 import sys
 import tarfile
-from typing import NamedTuple
+from typing import List, NamedTuple, Optional
 
 import pyspark
 import requests
@@ -39,7 +39,9 @@ async def get_spark_context() -> SparkContext:
 
     print(f"Downloading Spark from {url}")
     # Spark is large, so we use a streaming download and show a progress bar
-    with requests.get(url, stream=True) as response:
+    with requests.get(
+        url, stream=True, timeout=300
+    ) as response:  # 5 minute timeout for large files
         response.raise_for_status()
         total_size = int(response.headers.get("content-length", 0))
         block_size = 1024
@@ -81,8 +83,8 @@ def is_port_open(host, port):
 def setup_spark_environment_variables(
     log_dir: str,
     spark_home: str,
-    python_executable: str = None,
-    scratch_dir: str = None,
+    python_executable: Optional[str] = None,
+    scratch_dir: Optional[str] = None,
 ) -> None:
     """Setup the environment variables for Spark."""
     os.environ["SPARK_HOME"] = spark_home
@@ -100,7 +102,7 @@ def setup_spark_environment_variables(
 
 def make_workers_file(
     spark_home: str,
-    hostnames: list[str],
+    hostnames: List[str],
 ) -> str:
     dir_to_store = os.path.join(spark_home, "conf")
     os.makedirs(dir_to_store, exist_ok=True)

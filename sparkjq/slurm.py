@@ -1,17 +1,17 @@
 import os
 import subprocess
 import tempfile
-from typing import NamedTuple
+from typing import List, NamedTuple, Optional
 
 
 def determine_master_host() -> str:
     """Determine the master host for the Spark cluster."""
     # Check if SLURM is running
-    assert "SLURM_JOB_ID" in os.environ, (
-        "SLURM is not running. Please run this script in a SLURM job."
-    )
+    assert (
+        "SLURM_JOB_ID" in os.environ
+    ), "SLURM is not running. Please run this script in a SLURM job."
 
-    nodelist = subprocess.check_output(
+    nodelist = subprocess.check_output(  # nosec B603,B607 - scontrol is a SLURM system command
         ["scontrol", "show", "hostnames", os.environ["SLURM_JOB_NODELIST"]], text=True
     ).splitlines()
     # Get the first node in the list
@@ -20,13 +20,13 @@ def determine_master_host() -> str:
     return master_host
 
 
-def get_worker_list() -> list[str]:
+def get_worker_list() -> List[str]:
     """Get the list of worker nodes for the SLURM job."""
-    assert "SLURM_JOB_ID" in os.environ, (
-        "SLURM is not running. Please run this script in a SLURM job."
-    )
+    assert (
+        "SLURM_JOB_ID" in os.environ
+    ), "SLURM is not running. Please run this script in a SLURM job."
 
-    nodelist = subprocess.check_output(
+    nodelist = subprocess.check_output(  # nosec B603,B607 - scontrol is a SLURM system command
         ["scontrol", "show", "hostnames", os.environ["SLURM_JOB_NODELIST"]], text=True
     ).splitlines()
     # Get the list of worker nodes
@@ -51,13 +51,13 @@ class SlurmContext(NamedTuple):
 
 
 def get_slurm_context(
-    port: int = None,
-    scratch: str = None,
+    port: Optional[int] = None,
+    scratch: Optional[str] = None,
 ) -> SlurmContext:
     """Get the SLURM context for the current job."""
-    assert "SLURM_JOB_ID" in os.environ, (
-        "SLURM is not running. Please run this script in a SLURM job."
-    )
+    assert (
+        "SLURM_JOB_ID" in os.environ
+    ), "SLURM is not running. Please run this script in a SLURM job."
 
     nnodes = int(os.environ["SLURM_NNODES"])  # We want this to break if not set
     rank = int(
@@ -80,7 +80,8 @@ def get_slurm_context(
 
     if scratch is None:
         scratch = tempfile.mkdtemp(
-            prefix="spark-jobqueue-", dir=os.environ.get("SLURM_SCRATCH", "/tmp")
+            prefix="spark-jobqueue-",
+            dir=os.environ.get("SLURM_SCRATCH", "/tmp"),  # nosec B108
         )
     else:
         # Expand the scratch directory
@@ -100,7 +101,7 @@ def get_slurm_context(
 
 
 def build_log_dir(
-    path: str = None,
+    path: Optional[str] = None,
 ):
     """Build the log directory for the SLURM job."""
     if path is None:

@@ -63,15 +63,15 @@ def temp_spark_home():
     with tempfile.TemporaryDirectory() as tmpdir:
         spark_home = Path(tmpdir) / "spark-3.5.0-bin-hadoop3"
         spark_home.mkdir(parents=True)
-        
+
         # Create expected subdirectories
         (spark_home / "sbin").mkdir()
         (spark_home / "conf").mkdir()
-        
+
         # Create mock executables
         (spark_home / "sbin" / "start-all.sh").touch()
         (spark_home / "sbin" / "stop-all.sh").touch()
-        
+
         yield str(spark_home)
 
 
@@ -79,11 +79,8 @@ def temp_spark_home():
 def mock_spark_context(temp_spark_home):
     """Mock SparkContext object."""
     from sparkjq.spark import SparkContext
-    
-    return SparkContext(
-        home=temp_spark_home,
-        version="3.5.0"
-    )
+
+    return SparkContext(home=temp_spark_home, version="3.5.0")
 
 
 @pytest.fixture
@@ -102,9 +99,9 @@ def cleanup_env(monkeypatch):
     """Clean up environment variables after tests."""
     # Get current env vars
     original_env = dict(os.environ)
-    
+
     yield
-    
+
     # Restore original environment
     os.environ.clear()
     os.environ.update(original_env)
@@ -114,7 +111,7 @@ def cleanup_env(monkeypatch):
 def mock_requests():
     """Mock requests for HTTP operations."""
     import responses as resp
-    
+
     with resp.RequestsMock() as rsps:
         yield rsps
 
@@ -123,8 +120,10 @@ def mock_requests():
 def mock_asyncio_loop():
     """Mock asyncio event loop."""
     import asyncio
+
     with patch("asyncio.get_event_loop") as mock_get_loop:
         mock_loop = MagicMock()
+
         # Handle coroutines properly
         def run_until_complete(coro):
             if asyncio.iscoroutine(coro):
@@ -134,10 +133,11 @@ def mock_asyncio_loop():
                     result = loop.run_until_complete(coro)
                     loop.close()
                     return result
-                except:
+                except Exception:
                     # If that fails, just return a mock
                     return MagicMock()
             return coro
+
         mock_loop.run_until_complete = run_until_complete
         mock_get_loop.return_value = mock_loop
         yield mock_loop
@@ -148,7 +148,6 @@ def reset_modules():
     """Reset module-level variables between tests."""
     # This ensures clean state between tests
     yield
-    
+
     # Clean up any module-level state if needed
-    import sparkjq
     # Reload modules if necessary

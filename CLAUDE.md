@@ -103,7 +103,7 @@ Note: There is currently no test suite, linting configuration, or CI/CD setup in
 
 ### Fix Critical Errors
 1. Remove duplicate `sys` import in lib.py
-2. Add missing `sys` import in spark.py  
+2. Add missing `sys` import in spark.py
 3. Fix README example to use correct class name `SLURMCluster`
 4. Add missing dependencies to pyproject.toml
 
@@ -144,3 +144,64 @@ Note: There is currently no test suite, linting configuration, or CI/CD setup in
 26. Set up `ruff` for linting and formatting
 27. Run `ruff` to identify and fix code style issues
 28. Update development commands to use `uv` instead of pip
+29. Set up comprehensive pre-commit hooks for code quality
+
+## Development Commands
+
+### Installation
+```bash
+# Install all dependencies including dev dependencies
+uv pip install -e ".[dev]"
+```
+
+### Code Quality
+```bash
+# Run linting and formatting
+uv run ruff check .
+uv run ruff format .
+
+# Run type checking
+uv run mypy sparkjq/
+
+# Run security checks
+uv run bandit -r sparkjq/
+
+# Run all pre-commit hooks
+uv run pre-commit run --all-files
+```
+
+### Testing
+```bash
+# Run all tests
+uv run pytest
+
+# Run with coverage
+uv run pytest --cov=sparkjq --cov-report=html
+
+# Run specific test file
+uv run pytest tests/test_lib.py
+```
+
+### Pre-commit Setup
+```bash
+# Install pre-commit hooks
+uv run pre-commit install
+
+# Run pre-commit on all files
+uv run pre-commit run --all-files
+
+# Update pre-commit hooks
+uv run pre-commit autoupdate
+```
+
+## Pre-commit Configuration
+
+The project uses pre-commit hooks to ensure code quality. The following checks are performed:
+
+1. **Standard hooks**: trailing whitespace, end-of-file fixes, YAML/TOML/JSON validation
+2. **Ruff**: Python linting and formatting (PEP 8, isort, pyupgrade, etc.)
+3. **MyPy**: Static type checking with Python 3.8+ compatibility
+4. **Bandit**: Security vulnerability scanning
+5. **Quick tests**: Runs a subset of tests on pre-commit
+
+Pre-commit hooks run automatically on `git commit`. To bypass temporarily: `git commit --no-verify`

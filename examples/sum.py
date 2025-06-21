@@ -1,5 +1,5 @@
-from sparkjq import SLURMCluster
 from pyspark.sql import SparkSession
+from sparkjq import SLURMCluster
 
 if __name__ == "__main__":
     # Create a SLURM cluster
@@ -11,11 +11,8 @@ if __name__ == "__main__":
         print(f"Master node: {cluster.slurm_context.hostname}")
         print(f"Worker nodes: {cluster.slurm_context.world_size - 1}")
 
-
         # Create a Spark session
-        spark = SparkSession.builder \
-            .appName("Sum Example") \
-            .getOrCreate()
+        spark = SparkSession.builder.appName("Sum Example").getOrCreate()
 
         # Create a DataFrame with some data
         data = [(1,), (2,), (3,), (4,), (5,)]

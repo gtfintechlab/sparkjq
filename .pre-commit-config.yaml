@@ -1,4 +1,26 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-json
+      - id: check-toml
+      - id: check-xml
+      - id: debug-statements
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+      - id: pretty-format-json
+        args: ['--autofix', '--no-sort-keys']
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.7.0
     hooks:
@@ -6,12 +28,62 @@ repos:
         args: [--fix]
       - id: ruff-format
 
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.1
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests]
+        args: [--ignore-missing-imports]
+        exclude: ^tests/
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: '1.7.5'
+    hooks:
+      - id: bandit
+        args: ['-c', 'pyproject.toml']
+        additional_dependencies: ['bandit[toml]']
+        exclude: ^tests/
+
+  # Markdown linting - uncomment if Node.js is available
+  # - repo: https://github.com/igorshubovych/markdownlint-cli
+  #   rev: v0.35.0
+  #   hooks:
+  #     - id: markdownlint
+  #       args: ['--fix']
+
   - repo: local
     hooks:
       - id: tests
-        name: tests
-        entry: bash -c 'source .venv/bin/activate && pytest'
+        name: tests (quick)
+        entry: bash -c 'if [[ "$PRE_COMMIT_FROM_REF" && "$PRE_COMMIT_TO_REF" ]]; then
+            changed_files=$(git diff --name-only $PRE_COMMIT_FROM_REF $PRE_COMMIT_TO_REF);
+            if echo "$changed_files" | grep -qE "\.py$"; then
+              source .venv/bin/activate && uv run pytest tests/test_slurm.py -x -q;
+            else
+              echo "No Python files changed, skipping tests";
+            fi;
+          else
+            source .venv/bin/activate && uv run pytest tests/test_slurm.py -x -q;
+          fi'
         language: system
         pass_filenames: false
-        always_run: true
-        stages: [commit]
+        stages: [pre-commit]
+
+      - id: coverage-check
+        name: coverage check
+        entry: bash -c 'source .venv/bin/activate && uv run pytest --cov=sparkjq --cov-fail-under=90 --cov-report=term-missing:skip-covered -q'
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: [tests, coverage-check]
+  submodules: false

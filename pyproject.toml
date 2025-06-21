@@ -21,6 +21,10 @@ dev = [
     "pytest-mock>=3.0",
     "pytest-asyncio>=0.21",
     "responses>=0.23",
+    "pre-commit>=3.5.0",
+    "mypy>=1.7.0",
+    "types-requests>=2.31.0",
+    "bandit[toml]>=1.7.5",
 ]
 
 [tool.setuptools]
@@ -82,3 +86,22 @@ exclude_lines = [
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
 ]
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv"]
+skips = ["B101", "B404", "B603"]  # assert_used, import_subprocess, subprocess_without_shell - valid for SLURM integration
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = false
+disallow_untyped_decorators = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
