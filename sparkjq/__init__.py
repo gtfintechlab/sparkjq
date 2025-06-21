@@ -1,1 +1,1 @@
-from sparkjq.lib import SLURMCluster
+from sparkjq.lib import SLURMCluster as SLURMCluster
