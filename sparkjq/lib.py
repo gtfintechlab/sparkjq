@@ -1,47 +1,37 @@
-
-import os
-import sys
-import subprocess
 import asyncio
+import os
+import subprocess
 import sys
 
-from .slurm import SlurmContext, get_slurm_context, get_worker_list, build_log_dir
+from .slurm import SlurmContext, build_log_dir, get_slurm_context, get_worker_list
 from .spark import (
     SparkContext,
     get_spark_context,
+    make_workers_file,
     setup_spark_environment_variables,
-    make_workers_file
 )
 
-class SLURMCluster(object):
-    """
-    Represents a slurm cluster in pyspark.
+
+class SLURMCluster:
+    """Represents a slurm cluster in pyspark.
     Takes care of spinning up the cluster and shutting it down.
     """
-    slurm_context : SlurmContext 
-    spark_context : SparkContext
-    
-    def __init__(self,
-                 port : int = None,
-                 scratch_dir : str = None,
-                 log_dir : str = None):    
-            
-        self.slurm_context = get_slurm_context(
-            port=port,
-            scratch=scratch_dir
-        )
+
+    slurm_context: SlurmContext
+    spark_context: SparkContext
+
+    def __init__(self, port: int = None, scratch_dir: str = None, log_dir: str = None):
+        self.slurm_context = get_slurm_context(port=port, scratch=scratch_dir)
 
         self.spark_context = asyncio.get_event_loop().run_until_complete(get_spark_context())
         self.log_dir = build_log_dir(log_dir)
-        
+
         self.handle = None
         self.workers_file = None
         # From here on only the master node is working because the workers blocked
 
     def __enter__(self):
-        """
-        Utilization as context manager.
-        """
+        """Utilization as context manager."""
         setup_spark_environment_variables(
             log_dir=self.log_dir,
             spark_home=self.spark_context.home,
@@ -55,12 +45,7 @@ class SLURMCluster(object):
             hostnames=get_worker_list(),
         )
 
-
-        executable_path = os.path.join(
-            self.spark_context.home,
-            "sbin",
-            "start-all.sh"
-        )
+        executable_path = os.path.join(self.spark_context.home, "sbin", "start-all.sh")
 
         self.handle = subprocess.Popen(
             [executable_path],
@@ -76,15 +61,8 @@ class SLURMCluster(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        """
-        Utilization as context manager.
-        """
-
-        executable_path = os.path.join(
-            self.spark_context.home,
-            "sbin",
-            "stop-all.sh"
-        )
+        """Utilization as context manager."""
+        executable_path = os.path.join(self.spark_context.home, "sbin", "stop-all.sh")
         self.handle = subprocess.Popen(
             [executable_path],
             stdout=subprocess.PIPE,
@@ -101,15 +79,11 @@ class SLURMCluster(object):
             raise exc_type(exc_value)
 
         return False
-    
+
     def master(self):
-        """
-        Get the master node.
-        """
+        """Get the master node."""
         return self.slurm_context.hostname
-    
+
     def port(self):
-        """
-        Get the port of the master node.
-        """
+        """Get the port of the master node."""
         return self.slurm_context.port

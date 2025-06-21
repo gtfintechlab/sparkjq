@@ -7,6 +7,16 @@ authors = [
 ]
 readme = "README.md"
 requires-python = ">=3.8"
+dependencies = [
+    "pyspark",
+    "requests",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.7.0",
+]
 
 [tool.setuptools]
 packages = ["sparkjq"]
@@ -14,3 +24,36 @@ packages = ["sparkjq"]
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+src = ["sparkjq"]
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "I",     # isort
+    "C90",   # mccabe complexity
+    "N",     # pep8-naming
+    "D",     # pydocstyle
+    "RUF",   # ruff-specific rules
+]
+ignore = [
+    "D100",  # Missing docstring in public module
+    "D104",  # Missing docstring in public package
+    "D103",  # Missing docstring in public function
+    "D105",  # Missing docstring in magic method
+    "D107",  # Missing docstring in __init__
+    "D200",  # One-line docstring should fit on one line
+    "D205",  # 1 blank line required between summary line and description
+    "E501",  # Line too long
+    "RUF013", # PEP 484 prohibits implicit Optional
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
