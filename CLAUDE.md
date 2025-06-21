@@ -32,6 +32,21 @@ ruff check sparkjq/ --fix
 ruff format sparkjq/
 ```
 
+### Testing
+```bash
+# Run all tests
+uv run pytest
+
+# Run tests with coverage
+uv run pytest --cov=sparkjq --cov-report=html
+
+# Run specific test file
+uv run pytest tests/test_slurm.py
+
+# Run tests in verbose mode
+uv run pytest -v
+```
+
 ### Running the Code
 The main usage pattern is through the `SLURMCluster` context manager:
 ```python
