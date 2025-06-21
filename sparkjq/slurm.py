@@ -7,9 +7,9 @@ from typing import List, NamedTuple, Optional
 def determine_master_host() -> str:
     """Determine the master host for the Spark cluster."""
     # Check if SLURM is running
-    assert (
-        "SLURM_JOB_ID" in os.environ
-    ), "SLURM is not running. Please run this script in a SLURM job."
+    assert "SLURM_JOB_ID" in os.environ, (
+        "SLURM is not running. Please run this script in a SLURM job."
+    )
 
     nodelist = subprocess.check_output(  # nosec B603,B607 - scontrol is a SLURM system command
         ["scontrol", "show", "hostnames", os.environ["SLURM_JOB_NODELIST"]], text=True
@@ -22,9 +22,9 @@ def determine_master_host() -> str:
 
 def get_worker_list() -> List[str]:
     """Get the list of worker nodes for the SLURM job."""
-    assert (
-        "SLURM_JOB_ID" in os.environ
-    ), "SLURM is not running. Please run this script in a SLURM job."
+    assert "SLURM_JOB_ID" in os.environ, (
+        "SLURM is not running. Please run this script in a SLURM job."
+    )
 
     nodelist = subprocess.check_output(  # nosec B603,B607 - scontrol is a SLURM system command
         ["scontrol", "show", "hostnames", os.environ["SLURM_JOB_NODELIST"]], text=True
@@ -55,9 +55,9 @@ def get_slurm_context(
     scratch: Optional[str] = None,
 ) -> SlurmContext:
     """Get the SLURM context for the current job."""
-    assert (
-        "SLURM_JOB_ID" in os.environ
-    ), "SLURM is not running. Please run this script in a SLURM job."
+    assert "SLURM_JOB_ID" in os.environ, (
+        "SLURM is not running. Please run this script in a SLURM job."
+    )
 
     nnodes = int(os.environ["SLURM_NNODES"])  # We want this to break if not set
     rank = int(
